@@ -172,13 +172,6 @@ Selection: 2
 | result without disease) is 98.5%. First compute the numerator, P(+|D)*P(D). (This is also part of
 | the denominator.)
 
-> 0.997*0.001/(0.997*0.001 + (1-0.985)* (1-0.001))
-[1] 0.06238268
-
-| Not quite, but you're learning! Try again. Or, type info() for more options.
-
-| Multiply the test sensitivity by the prevalence.
-
 > 0.997 * 0.001
 [1] 0.000997
 
@@ -249,16 +242,6 @@ Selection: 1
 | Now recall that DLR_- = P(-|D) / P(-|~D). Here the numerator is the complement of sensitivity and
 | the denominator is specificity. From the arithmetic and what you know about accuracy tests, do you
 | expect DLR_- to be large or small?
-
-1: Small
-2: I haven't a clue.
-3: Large
-
-Selection: 3
-
-| Keep trying!
-
-| What happens when you divide by small number by a larger one?
 
 1: Large
 2: Small
