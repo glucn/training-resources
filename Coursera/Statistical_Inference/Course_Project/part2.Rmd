@@ -1,0 +1,116 @@
+---
+title: "Statistical Inference Course Project - Basic Inferential Data Analysis"
+author: "Gary Lu"
+date: "January 7, 2021"
+output: 
+  pdf_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 5, fig.width = 5)
+library(ggplot2)
+```
+
+In this part, we will analyze the ToothGrowth data in the R datasets package.
+
+## Data Exploration
+First, let's load the data and explore the data.
+``` {r}
+data("ToothGrowth") # The Effect Of Vitamin C On Tooth Growth In Guinea Pigs
+```
+```{r}
+str(ToothGrowth) # Display the structure of the data
+```
+
+```{r}
+head(ToothGrowth, 5) # Explore the first 5 rows of the data
+```
+```{r}
+summary(ToothGrowth) # Produce summaries of the data
+```
+
+`ToothGrowth` dataset has 60 observations and 3 variables:
+
+* `len`: numeric, Tooth length
+* `supp`: factor, Supplement type (VC or OJ).
+* `dose`: numeric, Dose in milligrams/day
+
+``` {r, fig.width=10}
+qplot(supp, len, 
+      data=ToothGrowth, 
+      facets=~dose, 
+      main="The Effect Of Vitamin C On Tooth Growth In Guinea Pigs",
+      xlab="Supplement type", 
+      ylab="Tooth length") + 
+  geom_boxplot(aes(fill = supp)) + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From the plot, we can observe the following 2 hypothesis that we will test in the next step:
+
+1. Increasing the dosage has a positive effect on tooth growth.
+1. In general, the OJ type supplement has a better effect than the VC type, but under 2.0 dosage, two supplement types may have similar effect.
+
+## Hypothesis Testing
+Before we carry out the hypothesis testing, we have to make some assumptions:
+
+1. The random variables are independent and identical distributed (i.i.d.);
+1. The tooth growth roughly follow a normal distribution;
+1. The variances of tooth growth is different under different supplement and dosage.
+
+And through all the following testing, we will use 5% as the tolerance limit of errors.
+
+### Dosage
+In order to test the hypothesis that increasing the dosage has a positive effect on tooth growth, we will split the data into 3 group `dose_05`, `dose_10`, and `dose_20` according to different dosage.
+``` {r}
+dose_05 <- ToothGrowth$len[ToothGrowth$dose == 0.5]
+dose_10 <- ToothGrowth$len[ToothGrowth$dose == 1]
+dose_20 <- ToothGrowth$len[ToothGrowth$dose == 2]
+```
+
+First, we will compare `does_05` and `dose_10`. The null hypothesis $H_0$ is $len(dose\_05) = len(dose\_10)$, and the alternative hypothesis $H_a$ is $len(dose\_05) < len(dose\_10)$. We will have one-sided t-test with unequal variance.
+``` {r}
+t.test(dose_05, dose_10, 
+       alternative = "less", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+As the p value ($6.342\times10^{-8}$) is lower than 5%, we reject the null hypothesis.
+
+Next, we will carry out the similar t-test for `dose_10` and `dose_20`. The null hypothesis $H_0$ is $len(dose\_10) = len(dose\_20)$, and the alternative hypothesis $H_a$ is $len(dose\_10) < len(dose\_20)$.
+``` {r}
+t.test(dose_10, dose_20, 
+       alternative = "less", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+As the p value ($9.532\times10^{-6}$) is lower than 5%, we reject the null hypothesis.
+
+With the testings above, we conclude that it is very likely that a higher dosage has positive effect on tooth growth.
+
+### Supplement Type
+First, let's test the hypothesis about two different supplement types in general. We will split the data into two groups `oj` and `vc`.
+``` {r}
+oj <- ToothGrowth$len[ToothGrowth$supp == 'OJ']
+vc <- ToothGrowth$len[ToothGrowth$supp == 'VC']
+```
+
+The null hypothesis $H_0$ is $len(oj) = len(vc)$, and the alternative hypothesis $H_a$ is $len(oj) < len(vc)$. We will have one-sided t-test with unequal variance.
+``` {r}
+t.test(oj, vc, 
+       alternative = "greater", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+As the p value ($0.03032$) is lower than 5%, we reject the null hypothesis.
+
+Next, we will test the hypothesis about two different supplement types when dosage equals to 2.0. We will define the following two groups `oj_20` and `vc_20`.
+``` {r}
+oj_20 <- ToothGrowth$len[ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 2]
+vc_20 <- ToothGrowth$len[ToothGrowth$supp == 'VC' & ToothGrowth$dose == 2]
+```
+
+The null hypothesis $H_0$ is $len(oj\_20) = len(vc\_20)$, and the alternative hypothesis $H_a$ is $len(oj) \neq len(vc)$. We will have two-sided t-test with unequal variance.
+``` {r}
+t.test(oj_20, vc_20, 
+       alternative = "two.sided", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+As the p value ($0.9639$) is greater than 5%, we fail to reject the null hypothesis.
+
+With the testings above, we conclude that it is likely that supplement type OJ has a better effect on tooth growth than supplement type VC in general. However, under dosage 2.0 milligrams/day, there is not enough evidence to show that there is a difference between the two types.
+
